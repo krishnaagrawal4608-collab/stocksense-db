@@ -35,6 +35,7 @@ export default function ReportsPage() {
   const [suppliers, setSuppliers] = useState([]);
   const [transactions, setTransactions] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [showSql, setShowSql] = useState(false);
 
   useEffect(() => {
     async function load() {
@@ -197,28 +198,38 @@ GROUP BY t.transaction_type;`
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <div className="flex items-center space-x-2">
-            <h1 className="text-xl sm:text-2xl font-bold text-slate-900 tracking-tight">Analytical SQL Reports</h1>
-            <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-emerald-100 text-emerald-800 font-bold border border-emerald-200">
-              Aggregated Analytics
+            <h1 className="text-xl sm:text-2xl font-bold text-slate-900 tracking-tight">Reports &amp; Analytics</h1>
+            <span className="text-[10px] font-semibold px-2.5 py-0.5 rounded-full bg-slate-100 text-slate-700 border border-slate-200">
+              Analytics
             </span>
           </div>
           <p className="text-xs text-slate-500 mt-1">
-            Generate inventory valuations, restock budgets, and turnover analysis powered by SQL group-by aggregations.
+            Generate inventory valuations, restock budgets, and turnover analysis.
           </p>
         </div>
 
-        <button
-          onClick={() => {
-            const dataToExport = reportType === 'valuation' ? categorySummary :
-                                reportType === 'low-stock' ? lowStockReport :
-                                reportType === 'supplier' ? supplierReport : transactions;
-            exportCSV(`stocksense_report_${reportType}`, dataToExport);
-          }}
-          className="flex items-center space-x-1.5 px-4 py-2 text-xs font-semibold text-white bg-blue-600 hover:bg-blue-700 rounded-lg shadow-sm shadow-blue-500/20 transition-colors"
-        >
-          <Download className="w-3.5 h-3.5" />
-          <span>Export Report to CSV</span>
-        </button>
+        <div className="flex items-center space-x-2">
+          <button
+            onClick={() => setShowSql(!showSql)}
+            className="flex items-center space-x-1.5 px-3 py-2 text-xs font-semibold text-slate-600 bg-white hover:bg-slate-50 rounded-lg border border-slate-200 transition-colors shadow-sm"
+          >
+            <Database className="w-3.5 h-3.5 text-blue-600" />
+            <span>{showSql ? 'Hide Query' : 'View SQL'}</span>
+          </button>
+
+          <button
+            onClick={() => {
+              const dataToExport = reportType === 'valuation' ? categorySummary :
+                                  reportType === 'low-stock' ? lowStockReport :
+                                  reportType === 'supplier' ? supplierReport : transactions;
+              exportCSV(`stocksense_report_${reportType}`, dataToExport);
+            }}
+            className="flex items-center space-x-1.5 px-4 py-2 text-xs font-semibold text-white bg-blue-600 hover:bg-blue-700 rounded-lg shadow-sm shadow-blue-500/20 transition-colors"
+          >
+            <Download className="w-3.5 h-3.5" />
+            <span>Export CSV</span>
+          </button>
+        </div>
       </div>
 
       {/* Report Selection Tabs */}
@@ -285,12 +296,14 @@ GROUP BY t.transaction_type;`
       </div>
 
       {/* SQL Code Viewer for Active Report */}
-      <SqlCodeViewer
-        sql={SQL_QUERIES[reportType]}
-        title={`Underlying SQL Query for ${reportType.toUpperCase()} Report`}
-        explanation="Aggregate calculation computed directly via relational PostgreSQL engine."
-        defaultExpanded={true}
-      />
+      {showSql && (
+        <SqlCodeViewer
+          sql={SQL_QUERIES[reportType]}
+          title={`Underlying SQL Query for ${reportType.toUpperCase()} Report`}
+          explanation="Aggregate calculation computed directly via relational PostgreSQL engine."
+          defaultExpanded={true}
+        />
+      )}
 
       {/* Report 1: Valuation Content */}
       {reportType === 'valuation' && (

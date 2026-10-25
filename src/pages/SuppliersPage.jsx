@@ -155,23 +155,23 @@ ORDER BY s.name ASC;`;
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <div className="flex items-center space-x-2">
-            <h1 className="text-xl sm:text-2xl font-bold text-slate-900 tracking-tight">Suppliers &amp; Vendors</h1>
-            <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-indigo-100 text-indigo-800 font-bold border border-indigo-200">
-              Procurement Dimension
+            <h1 className="text-xl sm:text-2xl font-bold text-slate-900 tracking-tight">Suppliers</h1>
+            <span className="text-[10px] font-semibold px-2.5 py-0.5 rounded-full bg-slate-100 text-slate-700 border border-slate-200">
+              {suppliers.length} Suppliers
             </span>
           </div>
           <p className="text-xs text-slate-500 mt-1">
-            Vendor master linked via <code className="font-mono text-blue-600">products.supplier_id</code> with ON DELETE SET NULL behavior.
+            Manage procurement vendors, contact information, and supplied catalog items.
           </p>
         </div>
 
         <div className="flex items-center space-x-2">
           <button
             onClick={() => setShowSql(!showSql)}
-            className="flex items-center space-x-1.5 px-3 py-2 text-xs font-semibold text-slate-700 bg-white hover:bg-slate-50 rounded-lg border border-slate-200 transition-colors shadow-sm"
+            className="flex items-center space-x-1.5 px-3 py-2 text-xs font-semibold text-slate-600 bg-white hover:bg-slate-50 rounded-lg border border-slate-200 transition-colors shadow-sm"
           >
             <Database className="w-3.5 h-3.5 text-blue-600" />
-            <span>{showSql ? 'Hide SQL Query' : 'View SQL Query'}</span>
+            <span>{showSql ? 'Hide Query' : 'View SQL'}</span>
           </button>
 
           <button

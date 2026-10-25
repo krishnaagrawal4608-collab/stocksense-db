@@ -216,23 +216,23 @@ ORDER BY p.${sortBy} ${sortOrder.toUpperCase()};`;
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <div className="flex items-center space-x-2">
-            <h1 className="text-xl sm:text-2xl font-bold text-slate-900 tracking-tight">Product Catalog &amp; Master Items</h1>
-            <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-blue-100 text-blue-700 font-bold border border-blue-200">
-              {products.length} Items Loaded
+            <h1 className="text-xl sm:text-2xl font-bold text-slate-900 tracking-tight">Products</h1>
+            <span className="text-[10px] font-semibold px-2.5 py-0.5 rounded-full bg-slate-100 text-slate-700 border border-slate-200">
+              {products.length} Products
             </span>
           </div>
           <p className="text-xs text-slate-500 mt-1">
-            Central inventory entity with referential keys, CHECK bounds, and SKU uniqueness.
+            Manage your inventory catalog, pricing, SKUs, and stock reorder levels.
           </p>
         </div>
 
         <div className="flex items-center space-x-2">
           <button
             onClick={() => setShowSqlViewer(!showSqlViewer)}
-            className="flex items-center space-x-1.5 px-3 py-2 text-xs font-semibold text-slate-700 bg-white hover:bg-slate-50 rounded-lg border border-slate-200 transition-colors shadow-sm"
+            className="flex items-center space-x-1.5 px-3 py-2 text-xs font-semibold text-slate-600 bg-white hover:bg-slate-50 rounded-lg border border-slate-200 transition-colors shadow-sm"
           >
             <Database className="w-3.5 h-3.5 text-blue-600" />
-            <span>{showSqlViewer ? 'Hide SQL Query' : 'View SQL Query'}</span>
+            <span>{showSqlViewer ? 'Hide Query' : 'View SQL'}</span>
           </button>
 
           <button

@@ -14,9 +14,6 @@ import {
   RefreshCw,
   ArrowRight,
   Database,
-  ArrowUpRight,
-  ArrowDownRight,
-  ShieldCheck,
   CheckCircle2
 } from 'lucide-react';
 import {
@@ -29,8 +26,7 @@ import {
   ResponsiveContainer,
   PieChart,
   Pie,
-  Cell,
-  Legend
+  Cell
 } from 'recharts';
 import { Link } from 'react-router-dom';
 
@@ -38,6 +34,7 @@ export default function DashboardPage() {
   const [metrics, setMetrics] = useState(null);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [showSqlInsights, setShowSqlInsights] = useState(false);
 
   async function loadData() {
     try {
@@ -61,46 +58,41 @@ export default function DashboardPage() {
   }
 
   if (loading) {
-    return <LoadingSpinner message="Executing Relational Aggregations..." />;
+    return <LoadingSpinner message="Loading live inventory metrics..." />;
   }
-
-  const PIE_COLORS = ['#10b981', '#f59e0b', '#ef4444'];
 
   return (
     <div className="space-y-6">
       {/* Top Banner / Welcome */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
         <div>
-          <div className="flex items-center space-x-2">
-            <h1 className="text-xl sm:text-2xl font-bold text-slate-900 tracking-tight">
-              Warehouse &amp; Inventory Dashboard
-            </h1>
-            <span className="text-[10px] font-mono uppercase font-bold px-2 py-0.5 rounded bg-blue-100 text-blue-700 border border-blue-200">
-              Live SQL State
-            </span>
-          </div>
+          <h1 className="text-xl sm:text-2xl font-bold text-slate-900 tracking-tight">
+            Inventory Overview
+          </h1>
           <p className="text-xs text-slate-500 mt-1">
-            Real-time aggregate calculations evaluated directly over PostgreSQL relations.
+            Real-time visibility across products, stock levels, valuations, and warehouse movements.
           </p>
         </div>
 
         <div className="flex items-center space-x-2">
+          {/* Subtle Query Inspector Toggle for academic evaluation */}
+          <button
+            onClick={() => setShowSqlInsights(!showSqlInsights)}
+            className="flex items-center space-x-1.5 px-3 py-1.5 text-xs font-medium text-slate-600 bg-slate-100 hover:bg-slate-200 rounded-lg border border-slate-200 transition-colors"
+            title="Inspect underlying database queries"
+          >
+            <Database className="w-3.5 h-3.5 text-blue-600" />
+            <span>{showSqlInsights ? 'Hide SQL Queries' : 'Query Insights'}</span>
+          </button>
+
           <button
             onClick={handleRefresh}
             disabled={refreshing}
             className="flex items-center space-x-1.5 px-3 py-1.5 text-xs font-semibold text-slate-700 bg-slate-100 hover:bg-slate-200 rounded-lg border border-slate-200 transition-colors"
           >
             <RefreshCw className={`w-3.5 h-3.5 ${refreshing ? 'animate-spin' : ''}`} />
-            <span>{refreshing ? 'Querying...' : 'Refresh Queries'}</span>
+            <span>{refreshing ? 'Refreshing...' : 'Refresh'}</span>
           </button>
-
-          <Link
-            to="/sql-lab"
-            className="flex items-center space-x-1 px-3 py-1.5 text-xs font-semibold text-white bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors shadow-sm"
-          >
-            <Database className="w-3.5 h-3.5" />
-            <span>Open SQL Lab</span>
-          </Link>
         </div>
       </div>
 
@@ -110,92 +102,78 @@ export default function DashboardPage() {
         <MetricCard
           title="Total Products"
           value={metrics?.totalProducts || 0}
-          subtitle="Active SKUs in master catalog"
+          subtitle="Active catalog items"
           icon={Boxes}
           colorScheme="blue"
-          sqlQuery={`SELECT COUNT(*) AS total_products 
-FROM products 
-WHERE is_active = true;`}
-          sqlExplanation="Calculates cardinality of active product records utilizing idx_products_user_id."
+          sqlQuery={showSqlInsights ? `SELECT COUNT(*) AS total_products FROM products WHERE is_active = true;` : null}
+          sqlExplanation="Calculates total count of active catalog products."
         />
 
         {/* Metric 2: Total Categories */}
         <MetricCard
           title="Total Categories"
           value={metrics?.totalCategories || 0}
-          subtitle="Taxonomy groupings"
+          subtitle="Item classifications"
           icon={Layers}
           colorScheme="teal"
-          sqlQuery={`SELECT COUNT(*) AS total_categories 
-FROM categories;`}
-          sqlExplanation="Counts distinct categorization entities in 3NF table categories."
+          sqlQuery={showSqlInsights ? `SELECT COUNT(*) AS total_categories FROM categories;` : null}
+          sqlExplanation="Counts distinct categories defined in the categories table."
         />
 
         {/* Metric 3: Total Suppliers */}
         <MetricCard
           title="Total Suppliers"
           value={metrics?.totalSuppliers || 0}
-          subtitle="Registered procurement vendors"
+          subtitle="Active procurement vendors"
           icon={Truck}
           colorScheme="indigo"
-          sqlQuery={`SELECT COUNT(*) AS total_suppliers 
-FROM suppliers;`}
-          sqlExplanation="Queries vendor table linked via products.supplier_id foreign key."
+          sqlQuery={showSqlInsights ? `SELECT COUNT(*) AS total_suppliers FROM suppliers;` : null}
+          sqlExplanation="Counts distinct suppliers linked via products.supplier_id."
         />
 
         {/* Metric 4: Total Inventory Value */}
         <MetricCard
-          title="Total Inventory Valuation"
+          title="Total Inventory Value"
           value={`₹${(metrics?.totalInventoryValue || 0).toLocaleString('en-IN', { minimumFractionDigits: 2 })}`}
-          subtitle="Cumulative stock valuation"
+          subtitle="On-hand asset valuation"
           icon={TrendingUp}
           colorScheme="emerald"
-          sqlQuery={`SELECT ROUND(SUM(current_stock * unit_price), 2) AS total_valuation 
-FROM products 
-WHERE is_active = true;`}
-          sqlExplanation="Aggregate arithmetic product SUM(quantity * price) representing total warehouse asset value."
+          sqlQuery={showSqlInsights ? `SELECT ROUND(SUM(current_stock * unit_price), 2) AS total_valuation FROM products WHERE is_active = true;` : null}
+          sqlExplanation="Calculates cumulative financial value of all on-hand inventory."
         />
 
         {/* Metric 5: Low Stock Items */}
         <MetricCard
           title="Low Stock Items"
           value={metrics?.lowStockCount || 0}
-          subtitle="Approaching reorder threshold"
+          subtitle="At or below reorder threshold"
           icon={AlertTriangle}
           colorScheme="amber"
-          sqlQuery={`SELECT COUNT(*) AS low_stock_count 
-FROM products 
-WHERE current_stock > 0 
-  AND current_stock <= reorder_level;`}
-          sqlExplanation="Threshold comparison against reorder_level column to trigger replenishment."
+          sqlQuery={showSqlInsights ? `SELECT COUNT(*) AS low_stock_count FROM products WHERE current_stock > 0 AND current_stock <= reorder_level;` : null}
+          sqlExplanation="Identifies products where on-hand count is approaching safety minimums."
         />
 
         {/* Metric 6: Out of Stock Items */}
         <MetricCard
           title="Out of Stock Items"
           value={metrics?.outOfStockCount || 0}
-          subtitle="Zero quantity (Emergency)"
+          subtitle="Zero quantity on-hand"
           icon={XCircle}
           colorScheme="rose"
-          sqlQuery={`SELECT COUNT(*) AS out_of_stock_count 
-FROM products 
-WHERE current_stock = 0;`}
-          sqlExplanation="Equality predicate identifying depleted inventory requiring purchase orders."
+          sqlQuery={showSqlInsights ? `SELECT COUNT(*) AS out_of_stock_count FROM products WHERE current_stock = 0;` : null}
+          sqlExplanation="Identifies completely depleted items requiring purchase orders."
         />
       </div>
 
       {/* Charts Section */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Chart 1: Category Distribution (Bar Chart) */}
+        {/* Chart 1: Category Distribution */}
         <div className="lg:col-span-2 bg-white rounded-xl border border-slate-200 p-5 shadow-sm">
           <div className="flex items-center justify-between mb-4">
             <div>
-              <h3 className="text-sm font-bold text-slate-900">Category Product Distribution &amp; Count</h3>
-              <p className="text-[11px] text-slate-500">Evaluated via GROUP BY category_id</p>
+              <h3 className="text-sm font-bold text-slate-900">Category Product Distribution</h3>
+              <p className="text-[11px] text-slate-500">Number of products per category</p>
             </div>
-            <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-slate-100 text-slate-600">
-              Aggregated View
-            </span>
           </div>
 
           <div className="h-64 w-full">
@@ -220,11 +198,11 @@ WHERE current_stock = 0;`}
           </div>
         </div>
 
-        {/* Chart 2: Stock Health Distribution (Pie Chart) */}
+        {/* Chart 2: Stock Health Distribution */}
         <div className="bg-white rounded-xl border border-slate-200 p-5 shadow-sm flex flex-col justify-between">
           <div>
-            <h3 className="text-sm font-bold text-slate-900">Inventory Health Breakdown</h3>
-            <p className="text-[11px] text-slate-500">Conditional CASE classifications</p>
+            <h3 className="text-sm font-bold text-slate-900">Inventory Stock Health</h3>
+            <p className="text-[11px] text-slate-500">Catalog proportion by availability</p>
           </div>
 
           <div className="h-48 w-full my-auto">
@@ -272,15 +250,15 @@ WHERE current_stock = 0;`}
             <div className="flex items-center justify-between mb-3">
               <div className="flex items-center space-x-2">
                 <AlertTriangle className="w-4 h-4 text-amber-500" />
-                <h3 className="text-sm font-bold text-slate-900">Urgent Low Stock Warnings</h3>
+                <h3 className="text-sm font-bold text-slate-900">Low Stock Alerts</h3>
               </div>
               <Link to="/products?status=low_stock" className="text-xs text-blue-600 hover:underline flex items-center space-x-1">
-                <span>View All Alerts</span>
+                <span>View all products</span>
                 <ArrowRight className="w-3 h-3" />
               </Link>
             </div>
             <p className="text-[11px] text-slate-500 mb-4">
-              Items matching <code className="font-mono text-slate-700">view_low_stock_products</code> requiring procurement orders.
+              Products at or below their designated reorder threshold.
             </p>
 
             {metrics?.lowStockList?.length === 0 ? (
@@ -295,7 +273,7 @@ WHERE current_stock = 0;`}
                     <div>
                       <p className="text-xs font-semibold text-slate-900">{item.name}</p>
                       <p className="text-[10px] text-slate-500 font-mono">
-                        {item.sku} &bull; Category: {item.category_name}
+                        {item.sku} &bull; {item.category_name}
                       </p>
                     </div>
                     <div className="text-right">
@@ -310,15 +288,17 @@ WHERE current_stock = 0;`}
             )}
           </div>
 
-          <div className="mt-4 pt-3 border-t border-slate-100">
-            <SqlCodeViewer
-              sql={`SELECT product_name, current_stock, reorder_level, (reorder_level - current_stock) AS shortage
+          {showSqlInsights && (
+            <div className="mt-4 pt-3 border-t border-slate-100">
+              <SqlCodeViewer
+                sql={`SELECT product_name, current_stock, reorder_level, (reorder_level - current_stock) AS shortage
 FROM view_low_stock_products
 ORDER BY shortage DESC;`}
-              title="Low Stock Alert View Query"
-              explanation="Precomputed database view abstracting replenishment logic with subtraction operator."
-            />
-          </div>
+                title="Low Stock Alert View Query"
+                explanation="Underlying PostgreSQL view evaluating shortage units."
+              />
+            </div>
+          )}
         </div>
 
         {/* Section B: Recent Stock Movements Audit */}
@@ -327,15 +307,15 @@ ORDER BY shortage DESC;`}
             <div className="flex items-center justify-between mb-3">
               <div className="flex items-center space-x-2">
                 <TrendingUp className="w-4 h-4 text-blue-500" />
-                <h3 className="text-sm font-bold text-slate-900">Recent Inventory Transactions</h3>
+                <h3 className="text-sm font-bold text-slate-900">Recent Stock Transactions</h3>
               </div>
               <Link to="/transactions" className="text-xs text-blue-600 hover:underline flex items-center space-x-1">
-                <span>View Audit Log</span>
+                <span>View all transactions</span>
                 <ArrowRight className="w-3 h-3" />
               </Link>
             </div>
             <p className="text-[11px] text-slate-500 mb-4">
-              Immutable ledger from <code className="font-mono text-slate-700">inventory_transactions</code>.
+              Real-time audit record of recent stock in and stock out movements.
             </p>
 
             <div className="space-y-2.5">
@@ -364,17 +344,19 @@ ORDER BY shortage DESC;`}
             </div>
           </div>
 
-          <div className="mt-4 pt-3 border-t border-slate-100">
-            <SqlCodeViewer
-              sql={`SELECT t.transaction_date, t.transaction_type, p.name, t.quantity, t.previous_stock, t.new_stock
+          {showSqlInsights && (
+            <div className="mt-4 pt-3 border-t border-slate-100">
+              <SqlCodeViewer
+                sql={`SELECT t.transaction_date, t.transaction_type, p.name, t.quantity, t.previous_stock, t.new_stock
 FROM inventory_transactions t
 JOIN products p ON t.product_id = p.id
 ORDER BY t.transaction_date DESC
 LIMIT 5;`}
-              title="Recent Transactions SQL Join"
-              explanation="Equi-join between immutable transaction audit log and products master table."
-            />
-          </div>
+                title="Recent Transactions SQL Join"
+                explanation="Equi-join between transactions audit ledger and products master catalog."
+              />
+            </div>
+          )}
         </div>
       </div>
     </div>

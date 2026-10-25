@@ -46,6 +46,7 @@ export default function App() {
           <Route path="/sql-lab" element={<SqlLabPage />} />
           <Route path="/database-explorer" element={<DatabaseExplorerPage />} />
           <Route path="/reports" element={<ReportsPage />} />
+          <Route path="/settings" element={<ProfilePage />} />
           <Route path="/profile" element={<ProfilePage />} />
         </Route>
 
